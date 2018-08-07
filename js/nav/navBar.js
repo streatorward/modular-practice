@@ -1,14 +1,14 @@
-const dataManager = require("../data/dataManager.js")
+const DataManager = require("../data/dataManager.js")
 
 function renderNavBar () {
-    return dataManager.getTypes().then(types => {
+    return DataManager.getTypes().then(types => {
         let navHTML = "<nav id=\"navbar\">"
 
         types.forEach(type => {
-            navHTML += `<a id="type--${type.id}" href="#">${type.description}</a>`
+            navHTML += `<a class="navLink" id="type--${type.id}" href="#">${type.description}</a>`
         })
 
-        navHTML += "<a href=\"#\">Create Product</a>"
+        navHTML += "<a id=\"productFormLink\" class=\"navLink\" href=\"#\">Create Product</a>"
         navHTML += "</nav>"
 
         return navHTML

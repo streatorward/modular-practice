@@ -1,15 +1,13 @@
-const dataManager = require("../data/dataManager.js")
+const DataManager = require("../data/dataManager.js")
 
-function renderProductList (productTypeId) {
-    dataManager.getProducts()
-        .then((products) => {
-            const container = document.querySelector("#container")
+function renderProductList (target, typeId) {
+    DataManager.getProducts()
+        .then(products => {
+            const container = document.querySelector(target)
             container.textContent = ""
 
             // Filter all products to the ones that have the correct type
-            const filteredProducts = products.filter(product => {
-                return product.type === productTypeId
-            })
+            const filteredProducts = products.filter(prod => prod.type === typeId)
 
             // Display only the products that are of the correct type
             filteredProducts.forEach(product => {

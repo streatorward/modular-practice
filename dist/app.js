@@ -4,36 +4,35 @@
 */
 
 const APIObject = {
+    /*
+        Purpose: Make GET request to API to retrieve product types
+    */
+    getTypes () {
+        return fetch("http://localhost:8088/types")
+            .then(response => response.json());
+    },
 
-}
-
-/*
-    Purpose: Make GET request to API to retrieve data
-*/
-APIObject.getTypes = () => {
-    return fetch("http://localhost:8088/types")
+    /*
+        Purpose: Retrieves all product objects from API
+    */
+    getProducts () {
+        return fetch("http://localhost:8088/inventory")
         .then(response => response.json());
-}
+    },
 
-/*
-    Purpose: Retrieves all product objects from API
-*/
-APIObject.getProducts = () => {
-    return fetch("http://localhost:8088/inventory")
-    .then(response => response.json());
-}
+    /*
+        Purpose: POSTs (creates) a new product in the API
+    */
+    saveProduct (product) {
+        return fetch("http://localhost:8088/inventory", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(product)
+        })
+    }
 
-/*
-    Purpose: POSTs (creates) a new product in the API
-*/
-APIObject.saveProduct = (product) => {
-    return fetch("http://localhost:8088/inventory", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(product)
-    });
 }
 
 module.exports = APIObject
@@ -42,9 +41,8 @@ module.exports = APIObject
 
 
 
-
 },{}],2:[function(require,module,exports){
-const dataManager = require("./data/dataManager.js")
+const DataManager = require("./data/dataManager.js")
 const renderProductList = require("./product/productList.js")
 const renderNavBar = require("./nav/navBar.js")
 const renderForm = require("./product/productForm.js")
@@ -54,32 +52,37 @@ const saveProduct = (product) => {
     // Save the product to the API
     DataManager.saveProduct(product)
     .then(() => {
-        renderProductList()
+        renderProductList("#container", product.type)
     })
 }
 
 renderNavBar().then(html => {
     document.querySelector("#navigation").innerHTML = html
     document.querySelector("#navbar").addEventListener("click", event => {
-        const typeClickedOn = parseInt(event.target.id.split("--")[1])
-        renderProductList(typeClickedOn)
+        const linkId = event.target.id.split("--")[1]
+        if (!linkId) {
+            renderForm("#container", saveProduct)
+        } else {
+            const typeClickedOn = parseInt(linkId)
+            renderProductList("#container", typeClickedOn)
+        }
+
     })
 })
-// renderProductList()
-renderForm("#container", saveProduct)
+renderProductList("#container")
 
 },{"./data/dataManager.js":1,"./nav/navBar.js":3,"./product/productForm.js":4,"./product/productList.js":5}],3:[function(require,module,exports){
-const dataManager = require("../data/dataManager.js")
+const DataManager = require("../data/dataManager.js")
 
 function renderNavBar () {
-    return dataManager.getTypes().then(types => {
+    return DataManager.getTypes().then(types => {
         let navHTML = "<nav id=\"navbar\">"
 
         types.forEach(type => {
-            navHTML += `<a id="type--${type.id}" href="#">${type.description}</a>`
+            navHTML += `<a class="navLink" id="type--${type.id}" href="#">${type.description}</a>`
         })
 
-        navHTML += "<a href=\"#\">Create Product</a>"
+        navHTML += "<a id=\"productFormLink\" class=\"navLink\" href=\"#\">Create Product</a>"
         navHTML += "</nav>"
 
         return navHTML
@@ -88,7 +91,7 @@ function renderNavBar () {
 
 module.exports = renderNavBar
 },{"../data/dataManager.js":1}],4:[function(require,module,exports){
-const dataManager = require("../data/dataManager.js")
+const DataManager = require("../data/dataManager.js")
 const renderProductList = require("./productList.js")
 
 let instructions = null
@@ -100,7 +103,16 @@ let instructions = null
 */
 const addListener = () => {
     document.querySelector(".btn--saveProduct")
-        .addEventListener("click", instructions)
+        .addEventListener("click", () => {
+            const product = {}
+            product.name = document.querySelector("#productName").value
+            product.description = document.querySelector("#productDescription").value
+            product.price = parseFloat(document.querySelector("#productPrice").value)
+            product.quantity = parseInt(document.querySelector("#productQuantity").value)
+            product.type = parseInt(document.querySelector("#productType").value)
+
+            instructions(product)
+        })
 }
 
 /*
@@ -141,7 +153,7 @@ const buildFormTemplate = (types) => {
 */
 const renderForm = (targetElement, saveInstructions) => {
     instructions = saveInstructions
-    return dataManager.getTypes()
+    return DataManager.getTypes()
         .then(types => {
             // Build options from the product types
             const options = types.map(type => {
@@ -158,19 +170,20 @@ const renderForm = (targetElement, saveInstructions) => {
 
 module.exports = renderForm
 
-},{"../data/dataManager.js":1,"./productList.js":5}],5:[function(require,module,exports){
-const dataManager = require("../data/dataManager.js")
 
-function renderProductList (productTypeId) {
-    dataManager.getProducts()
-        .then((products) => {
-            const container = document.querySelector("#container")
+
+
+},{"../data/dataManager.js":1,"./productList.js":5}],5:[function(require,module,exports){
+const DataManager = require("../data/dataManager.js")
+
+function renderProductList (target, typeId) {
+    DataManager.getProducts()
+        .then(products => {
+            const container = document.querySelector(target)
             container.textContent = ""
 
             // Filter all products to the ones that have the correct type
-            const filteredProducts = products.filter(product => {
-                return product.type === productTypeId
-            })
+            const filteredProducts = products.filter(prod => prod.type === typeId)
 
             // Display only the products that are of the correct type
             filteredProducts.forEach(product => {

@@ -1,4 +1,4 @@
-const dataManager = require("../data/dataManager.js")
+const DataManager = require("../data/dataManager.js")
 const renderProductList = require("./productList.js")
 
 let instructions = null
@@ -10,7 +10,16 @@ let instructions = null
 */
 const addListener = () => {
     document.querySelector(".btn--saveProduct")
-        .addEventListener("click", instructions)
+        .addEventListener("click", () => {
+            const product = {}
+            product.name = document.querySelector("#productName").value
+            product.description = document.querySelector("#productDescription").value
+            product.price = parseFloat(document.querySelector("#productPrice").value)
+            product.quantity = parseInt(document.querySelector("#productQuantity").value)
+            product.type = parseInt(document.querySelector("#productType").value)
+
+            instructions(product)
+        })
 }
 
 /*
@@ -51,7 +60,7 @@ const buildFormTemplate = (types) => {
 */
 const renderForm = (targetElement, saveInstructions) => {
     instructions = saveInstructions
-    return dataManager.getTypes()
+    return DataManager.getTypes()
         .then(types => {
             // Build options from the product types
             const options = types.map(type => {
@@ -67,3 +76,6 @@ const renderForm = (targetElement, saveInstructions) => {
 }
 
 module.exports = renderForm
+
+
+
